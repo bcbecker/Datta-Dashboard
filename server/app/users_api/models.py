@@ -20,7 +20,7 @@ class User(db.Model):
     def check_password(self, _password):
         return bcrypt.check_password_hash(self.password, _password)
 
-    def save_user(self):
+    def save(self):
         db.session.add(self)
         db.session.commit()
 
@@ -31,18 +31,18 @@ class User(db.Model):
         user_dict['email'] = self.email
         return user_dict
 
-    def to_JSON(self):
+    def to_json(self):
         return self.to_dict()
 
 
 class JWTBlocklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     jwt_token = db.Column(db.String(), nullable=False)
-    username = db.Column(db.DateTime(), nullable=False)
+    time_created = db.Column(db.DateTime(), nullable=False)
 
     def __repr__(self):
         return f'Expired Token: {self.jwt_token}'
 
-    def save_token(self):
+    def save(self):
         db.session.add(self)
         db.session.commit()

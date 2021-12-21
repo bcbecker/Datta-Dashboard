@@ -54,11 +54,13 @@ class Signup(Resource):
             new_user.set_password(_password)
             new_user.save()
 
-            return ({'msg': 'Successfully registered.',
+            return ({'success': True,
+                     'msg': 'Successfully registered.',
                      'user': new_user.to_json(),
                      }, 201)
         else:
-            return ({'msg': 'User already exists!'}, 202)
+            return ({'success': False,
+                     'msg': 'User already exists!'}, 202)
 
 
 @users_api.route('/api/users/login')
@@ -76,18 +78,21 @@ class Login(Resource):
         user = User.query.filter_by(email=_email).first()
 
         if not user:
-            return ({'msg': 'User not found'}, 401)
+            return ({'success': False,
+                     'msg': 'User not found'}, 401)
 
         if user.check_password(_password):
             token = create_access_token(identity=user.email)  # should be public_id
             user.jwt_auth = True
             user.save()
 
-            return ({'msg': 'Successfully logged in.',
+            return ({'success': True,
+                     'msg': 'Successfully logged in.',
                      'user': user.to_json(),
                      'token': token}, 200)
 
-        return ({'msg': 'Could not verify credentials'}, 403)
+        return ({'success': False,
+                 'msg': 'Could not verify credentials'}, 403)
 
 
 @users_api.route('/api/users/update')
@@ -115,8 +120,9 @@ class UpdateUser (Resource):
 
         user.save()
 
-        return ({'msg': 'Successfully updated user.',
-                 'user': user.to_json()}, 200)
+        return ({'success': True,
+                'msg': 'Successfully updated user.',
+                'user': user.to_json()}, 200)
 
 
 @users_api.route('/api/users/logout')
@@ -135,5 +141,6 @@ class LogoutUser(Resource):
         user.jwt_auth = False
         user.save()
 
-        return ({'msg': 'Successfully logged out.',
+        return ({'success': True,
+                 'msg': 'Successfully logged out.',
                  'user': user.to_json()}, 200)

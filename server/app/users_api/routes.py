@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 from flask import request
 from flask_restx import Api, Resource, fields
 from flask_jwt_extended import (create_access_token, get_jwt_identity, jwt_required)
@@ -33,10 +32,10 @@ class Signup(Resource):
     '''
     Takes signup_user_model as input and creates a new user based on the data
     '''
-    @users_api.expect(signup_user_model)
+    @users_api.expect(signup_user_model, validate=True)
     def post(self):
 
-        request_data = request.form
+        request_data = request.get_json()
         _username = request_data.get('username')
         _email = request_data.get('email')
         _password = request_data.get('password')
@@ -68,10 +67,10 @@ class Login(Resource):
     '''
     Takes login_user_model as input and logs user in, creating JWT for auth
     '''
-    @users_api.expect(login_user_model)
+    @users_api.expect(login_user_model, validate=True)
     def post(self):
 
-        request_data = request.form
+        request_data = request.get_json()
         _email = request_data.get('email')
         _password = request_data.get('password')
 
@@ -104,7 +103,7 @@ class UpdateUser (Resource):
     @jwt_required()
     def post(self):
 
-        request_data = request.form
+        request_data = request.get_json()
         _new_username = request_data.get('username')
         _new_email = request_data.get('email')
         _new_password = request_data.get('password')
@@ -121,8 +120,8 @@ class UpdateUser (Resource):
         user.save()
 
         return ({'success': True,
-                'msg': 'Successfully updated user.',
-                'user': user.to_json()}, 200)
+                 'msg': 'Successfully updated user.',
+                 'user': user.to_json()}, 200)
 
 
 @users_api.route('/api/users/logout')
@@ -134,7 +133,7 @@ class LogoutUser(Resource):
     def post(self):
 
         _jwt_token = request.headers["Authorization"]
-        jwt_token_blocked = JWTBlocklist(jwt_token= _jwt_token, time_created=datetime.utcnow())
+        jwt_token_blocked = JWTBlocklist(jwt_token= _jwt_token)
         jwt_token_blocked.save()
 
         user = User.query.filter_by(email=get_jwt_identity()).first()
@@ -142,5 +141,5 @@ class LogoutUser(Resource):
         user.save()
 
         return ({'success': True,
-                 'msg': 'Successfully logged out.',
-                 'user': user.to_json()}, 200)
+                'msg': 'Successfully logged out.',
+                'user': user.to_json()}, 200)

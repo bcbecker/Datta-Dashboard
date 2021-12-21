@@ -3,12 +3,13 @@ from datetime import datetime
 
 
 class User(db.Model):
+    #TODO: change token identity to public_id from email, index public_id
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
-    username = db.Column(db.String(100))
-    email = db.Column(db.String(70), unique=True)  # index email?
-    password = db.Column(db.String(80))
-    jwt_auth = db.Column(db.Boolean())
+    public_id = db.Column(db.String(50), nullable=False, unique=True)
+    username = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(70), nullable=False, unique=True)
+    password = db.Column(db.String(80), nullable=False)
+    jwt_auth = db.Column(db.Boolean(), nullable=False)
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
     def __repr__(self):
@@ -36,9 +37,10 @@ class User(db.Model):
 
 
 class JWTBlocklist(db.Model):
+    #TODO: index jwt_token?
     id = db.Column(db.Integer, primary_key=True)
     jwt_token = db.Column(db.String(), nullable=False)
-    time_created = db.Column(db.DateTime(), nullable=False)
+    time_created = db.Column(db.DateTime(), nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
         return f'Expired Token: {self.jwt_token}'

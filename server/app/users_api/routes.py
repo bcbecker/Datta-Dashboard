@@ -3,6 +3,7 @@ from flask import request
 from flask_restx import Api, Resource, fields
 from flask_jwt_extended import (create_access_token, get_jwt_identity, jwt_required)
 from .models import User, JWTBlocklist
+from .utils import is_token_in_blocklist
 
 
 users_api = Api(version="1.0", title="Users API")
@@ -30,7 +31,8 @@ update_user_model = users_api.model('UpdateModel', {"userID": fields.String(requ
 @users_api.route('/api/users/signup')
 class Signup(Resource):
     '''
-    Takes signup_user_model as input and creates a new user based on the data
+    Takes signup_user_model as input and creates a new user based on the data,
+    if user doesn't already exist
     '''
     @users_api.expect(signup_user_model, validate=True)
     def post(self):
@@ -65,7 +67,8 @@ class Signup(Resource):
 @users_api.route('/api/users/login')
 class Login(Resource):
     '''
-    Takes login_user_model as input and logs user in, creating JWT for auth
+    Takes login_user_model as input and logs user in if passwords match,
+    creating JWT for auth to be sent to protected endpoints
     '''
     @users_api.expect(login_user_model, validate=True)
     def post(self):
@@ -98,6 +101,7 @@ class Login(Resource):
 class UpdateUser (Resource):
     '''
     Takes update_user_model as input and updates their data if they provide a valid JWT
+    and the user exists
     '''
     @users_api.expect(update_user_model)
     @jwt_required()
@@ -110,12 +114,16 @@ class UpdateUser (Resource):
 
         user = User.query.filter_by(email=get_jwt_identity()).first()
 
+        if not user:
+            return ({'success': False,
+                     'msg': 'User not found'}, 401)
+
         if _new_username:
             user.username = _new_username
         if _new_email:
             user.email = _new_email
         if _new_password:
-            user.password = user.set_password(_new_password)
+            user.set_password(_new_password)
 
         user.save()
 
@@ -132,14 +140,16 @@ class LogoutUser(Resource):
     @jwt_required()
     def post(self):
 
-        _jwt_token = request.headers["Authorization"]
-        jwt_token_blocked = JWTBlocklist(jwt_token= _jwt_token)
-        jwt_token_blocked.save()
-
         user = User.query.filter_by(email=get_jwt_identity()).first()
         user.jwt_auth = False
+        #TODO: regen public_id?
+        #user.public_id = str(uuid.uuid4())
         user.save()
 
+        _jwt_token = request.headers["Authorization"]
+        jwt_token_blocked = JWTBlocklist(jwt_token=_jwt_token)
+        jwt_token_blocked.save()
+
         return ({'success': True,
-                'msg': 'Successfully logged out.',
-                'user': user.to_json()}, 200)
+                 'msg': 'Successfully logged out.',
+                 'user': user.to_json()}, 200)

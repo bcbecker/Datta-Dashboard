@@ -22,8 +22,3 @@ class TestWebApp(unittest.TestCase):
     def test_app(self):
         assert self.app is not None
         assert current_app == self.app
-
-    def test_home_page_redirect(self):
-        response = self.client.get('/api/users/signup', follow_redirects=True)
-        assert response.status_code == 201
-        assert response.request.path == '/api/users/signup'

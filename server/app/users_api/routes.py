@@ -2,7 +2,7 @@ import uuid
 from flask import request
 from flask_restx import Api, Resource, fields
 from flask_jwt_extended import (create_access_token, get_jwt_identity, jwt_required)
-from .models import User, JWTBlocklist
+from ..models import User, JWTBlocklist
 from .utils import is_token_in_blocklist
 
 

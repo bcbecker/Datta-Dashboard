@@ -1,6 +1,6 @@
 from flask import request
-from . import jwt
-from .models import JWTBlocklist
+from .. import jwt
+from ..models import JWTBlocklist
 
 '''
 Utility functions for setting up custom JWT callbacks

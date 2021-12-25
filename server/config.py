@@ -34,5 +34,5 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('sqlite://')
+    SQLALCHEMY_DATABASE_URI = 'sqlite://'
     TESTING = True

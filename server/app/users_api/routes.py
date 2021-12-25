@@ -61,7 +61,8 @@ class Signup(Resource):
                      }, 201)
         else:
             return ({'success': False,
-                     'msg': 'User already exists!'}, 202)
+                     'msg': 'User already exists!'
+                    }, 202)
 
 
 @users_api.route('/api/users/login')
@@ -81,7 +82,8 @@ class Login(Resource):
 
         if not user:
             return ({'success': False,
-                     'msg': 'User not found'}, 401)
+                     'msg': 'User not found'
+                    }, 401)
 
         if user.check_password(_password):
             token = create_access_token(identity=user.email)  # should be public_id
@@ -91,10 +93,12 @@ class Login(Resource):
             return ({'success': True,
                      'msg': 'Successfully logged in.',
                      'user': user.to_json(),
-                     'token': token}, 200)
+                     'token': token
+                    }, 200)
 
         return ({'success': False,
-                 'msg': 'Could not verify credentials'}, 403)
+                 'msg': 'Could not verify credentials'
+                }, 403)
 
 
 @users_api.route('/api/users/update')
@@ -116,7 +120,8 @@ class UpdateUser (Resource):
 
         if not user:
             return ({'success': False,
-                     'msg': 'User not found'}, 401)
+                     'msg': 'User not found'
+                    }, 401)
 
         if _new_username:
             user.username = _new_username
@@ -129,7 +134,8 @@ class UpdateUser (Resource):
 
         return ({'success': True,
                  'msg': 'Successfully updated user.',
-                 'user': user.to_json()}, 200)
+                 'user': user.to_json()
+                }, 200)
 
 
 @users_api.route('/api/users/logout')
@@ -152,4 +158,5 @@ class LogoutUser(Resource):
 
         return ({'success': True,
                  'msg': 'Successfully logged out.',
-                 'user': user.to_json()}, 200)
+                 'user': user.to_json()
+                }, 200)

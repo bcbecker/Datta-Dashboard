@@ -2,7 +2,7 @@ import unittest
 import uuid
 import json
 from flask import current_app
-from flask_jwt_extended import (create_access_token, get_jwt_identity)
+from flask_jwt_extended import create_access_token
 from app import create_app, db
 from app.models import User, JWTBlocklist
 from config import TestingConfig
@@ -149,7 +149,7 @@ class TestFlaskApp(unittest.TestCase):
     def test_user_logout(self):
         '''
         Given a test client, attempt to log user out with JWT token. Verify
-        status codes and blocklisted JWT for a successful creation.
+        status codes and blocklisted JWT for successful creation.
         '''
 
         token_200 = create_access_token(identity='admin@gmail.com')
@@ -161,13 +161,10 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True
                                         )
 
-        blocked_token = JWTBlocklist(jwt_token=token_200)
-        blocked_token.save()
-
         user = User.query.filter_by(email='admin@gmail.com').first()
-        token = JWTBlocklist.query.filter_by(jwt_token=token_200).first()
+        blocked_token = JWTBlocklist.query.filter_by(jwt_token=token_200).first()
 
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/logout'
         assert user.jwt_auth == False
-        assert token is not None
+        assert blocked_token is not None

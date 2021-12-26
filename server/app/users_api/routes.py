@@ -152,7 +152,7 @@ class LogoutUser(Resource):
         #user.public_id = str(uuid.uuid4())
         user.save()
 
-        _jwt_token = request.headers["Authorization"]
+        _jwt_token = request.headers["Authorization"][7:]
         jwt_token_blocked = JWTBlocklist(jwt_token=_jwt_token)
         jwt_token_blocked.save()
 

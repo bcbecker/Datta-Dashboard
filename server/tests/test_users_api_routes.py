@@ -21,6 +21,7 @@ class TestFlaskApp(unittest.TestCase):
         self._populate_db()
         self.client = self.app.test_client()
 
+
     def tearDown(self):
         '''
         Tears down the set up test_client, db, and app context.
@@ -30,6 +31,7 @@ class TestFlaskApp(unittest.TestCase):
         self.app = None
         self.appctx = None
         self.client = None
+
 
     def _populate_db(self):
         '''
@@ -44,6 +46,7 @@ class TestFlaskApp(unittest.TestCase):
         user.set_password('adminisabadpassword')
         user.save()
 
+
     def test_app(self):
         '''
        Verify that the current app is the app set up in the setUp method.
@@ -51,36 +54,43 @@ class TestFlaskApp(unittest.TestCase):
         assert self.app is not None
         assert current_app == self.app
 
+
     def test_user_signup(self):
         '''
         Given a test client, create a user with the necessary JSON data.
         Verify status codes and user attributes for a successful creation,
         and make sure 202 if user already exists.
         '''
+
         data = {'username': 'Testing',
                 'email': 'testing@gmail.com',
                 'password': 'badpassword'
                 }
+
         response_201 = self.client.post('/api/users/signup',
                                         headers={'Content-Type': 'application/json'},
                                         data=json.dumps(data),
                                         follow_redirects=True
                                         )
-                                
+                    
         response_202 = self.client.post('/api/users/signup',
                                         headers={'Content-Type': 'application/json'},
                                         data=json.dumps(data),
                                         follow_redirects=True
                                         )
-
+        
         user = User.query.filter_by(email='testing@gmail.com').first()
 
         assert response_201.status_code == 201
-        assert response_202.status_code == 202
         assert response_201.request.path == '/api/users/signup'
+        assert response_202.status_code == 202
+        assert response_202.request.path == '/api/users/signup'
         assert user.username == 'Testing'
         assert user.jwt_auth == False
+        assert user is not None
+        assert isinstance(user.to_json(), dict)
         
+    
     def test_user_login(self):
         '''
         Given a test client, attempt to log in with proper JSON credentials. Verify status
@@ -104,14 +114,29 @@ class TestFlaskApp(unittest.TestCase):
                                                     }),
                                         follow_redirects=True 
                                         )
+        
+        response_403 = self.client.post('/api/users/login',
+                                        headers={'Content-Type': 'application/json'},
+                                        data=json.dumps(
+                                                    {'email': 'admin@gmail.com',
+                                                    'password': 'WRONGPASSWORD'
+                                                    }),
+                                        follow_redirects=True 
+                                        )
 
         user = User.query.filter_by(email='admin@gmail.com').first()
 
         assert response_200.status_code == 200
-        assert response_401.status_code == 401
         assert response_200.request.path == '/api/users/login'
         assert response_200.json.get('token') is not None
+        assert response_401.status_code == 401
+        assert response_401.request.path == '/api/users/login'
+        assert response_401.json.get('token') is None
+        assert response_403.status_code == 403
+        assert response_403.request.path == '/api/users/login'
+        assert response_403.json.get('token') is None
         assert user.jwt_auth == True
+
 
     def test_user_update(self):
         '''
@@ -121,7 +146,6 @@ class TestFlaskApp(unittest.TestCase):
         '''
 
         token_200 = create_access_token(identity='admin@gmail.com')
-        token_401 = create_access_token(identity='testing@gmail.com')
 
         response_200 = self.client.post('/api/users/update',
                                         headers={'Content-Type': 'application/json',
@@ -130,6 +154,8 @@ class TestFlaskApp(unittest.TestCase):
                                         data=json.dumps({'username': 'Changed'}),
                                         follow_redirects=True
                                         )
+
+        token_401 = create_access_token(identity='testing@gmail.com')
 
         response_401 = self.client.post('/api/users/update',
                                         headers={'Content-Type': 'application/json',
@@ -142,9 +168,11 @@ class TestFlaskApp(unittest.TestCase):
         user = User.query.filter_by(email='admin@gmail.com').first()
 
         assert response_200.status_code == 200
-        assert response_401.status_code == 401
         assert response_200.request.path == '/api/users/update'
+        assert response_401.status_code == 401
+        assert response_401.request.path == '/api/users/update'
         assert user.username == 'Changed'
+
 
     def test_user_logout(self):
         '''
@@ -161,10 +189,22 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True
                                         )
 
+        token_401 = create_access_token(identity='testing@gmail.com')
+
+        response_401 = self.client.post('/api/users/logout',
+                                        headers={'Content-Type': 'application/json',
+                                                'Authorization': f'Bearer {token_401}'
+                                                },
+                                        follow_redirects=True
+                                        )
+
         user = User.query.filter_by(email='admin@gmail.com').first()
         blocked_token = JWTBlocklist.query.filter_by(jwt_token=token_200).first()
 
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/logout'
+        assert response_401.status_code == 401
+        assert response_401.request.path == '/api/users/logout'
         assert user.jwt_auth == False
         assert blocked_token is not None
+        assert isinstance(blocked_token.jwt_token, str)

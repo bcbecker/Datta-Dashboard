@@ -147,16 +147,22 @@ class LogoutUser(Resource):
     def post(self):
 
         user = User.query.filter_by(email=get_jwt_identity()).first()
-        user.jwt_auth = False
-        #TODO: regen public_id?
-        #user.public_id = str(uuid.uuid4())
-        user.save()
 
-        _jwt_token = request.headers["Authorization"][7:]
-        jwt_token_blocked = JWTBlocklist(jwt_token=_jwt_token)
-        jwt_token_blocked.save()
+        if user:
+            user.jwt_auth = False
+            #TODO: regen public_id?
+            #user.public_id = str(uuid.uuid4())
+            user.save()
 
-        return ({'success': True,
-                 'msg': 'Successfully logged out.',
-                 'user': user.to_json()
-                }, 200)
+            _jwt_token = request.headers["Authorization"].split(" ")[1]
+            jwt_token_blocked = JWTBlocklist(jwt_token=_jwt_token)
+            jwt_token_blocked.save()
+
+            return ({'success': True,
+                    'msg': 'Successfully logged out.',
+                    'user': user.to_json()
+                    }, 200)
+                    
+        return ({'success': False,
+                 'msg': 'User not found'
+                }, 401)

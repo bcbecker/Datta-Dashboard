@@ -21,7 +21,6 @@ class TestFlaskApp(unittest.TestCase):
         self._populate_db()
         self.client = self.app.test_client()
 
-
     def tearDown(self):
         '''
         Tears down the set up test_client, db, and app context.
@@ -31,7 +30,6 @@ class TestFlaskApp(unittest.TestCase):
         self.app = None
         self.appctx = None
         self.client = None
-
 
     def _populate_db(self):
         '''
@@ -46,14 +44,12 @@ class TestFlaskApp(unittest.TestCase):
         user.set_password('adminisabadpassword')
         user.save()
 
-
     def test_app(self):
         '''
        Verify that the current app is the app set up in the setUp method.
         '''
         assert self.app is not None
         assert current_app == self.app
-
 
     def test_user_signup(self):
         '''
@@ -88,8 +84,7 @@ class TestFlaskApp(unittest.TestCase):
         assert user.username == 'Testing'
         assert user.jwt_auth == False
         assert user is not None
-        assert isinstance(user.to_json(), dict)
-        
+        assert isinstance(user.to_json(), dict)      
     
     def test_user_login(self):
         '''
@@ -101,7 +96,7 @@ class TestFlaskApp(unittest.TestCase):
                                         headers={'Content-Type': 'application/json'},
                                         data=json.dumps(
                                                     {'email': 'admin@gmail.com',
-                                                    'password': 'adminisabadpassword'
+                                                     'password': 'adminisabadpassword'
                                                     }),
                                         follow_redirects=True
                                         )
@@ -110,7 +105,7 @@ class TestFlaskApp(unittest.TestCase):
                                         headers={'Content-Type': 'application/json'},
                                         data=json.dumps(
                                                     {'email': 'testing@gmail.com',
-                                                    'password': 'badpassword'
+                                                     'password': 'badpassword'
                                                     }),
                                         follow_redirects=True 
                                         )
@@ -119,7 +114,7 @@ class TestFlaskApp(unittest.TestCase):
                                         headers={'Content-Type': 'application/json'},
                                         data=json.dumps(
                                                     {'email': 'admin@gmail.com',
-                                                    'password': 'WRONGPASSWORD'
+                                                     'password': 'WRONGPASSWORD'
                                                     }),
                                         follow_redirects=True 
                                         )
@@ -137,7 +132,6 @@ class TestFlaskApp(unittest.TestCase):
         assert response_403.json.get('token') is None
         assert user.jwt_auth == True
 
-
     def test_user_update(self):
         '''
         Given a test client, attempt to change their attributes with proper
@@ -149,7 +143,7 @@ class TestFlaskApp(unittest.TestCase):
 
         response_200 = self.client.post('/api/users/update',
                                         headers={'Content-Type': 'application/json',
-                                                'Authorization': f'Bearer {token_200}'
+                                                 'Authorization': f'Bearer {token_200}'
                                                 },
                                         data=json.dumps({'username': 'Changed'}),
                                         follow_redirects=True
@@ -159,7 +153,7 @@ class TestFlaskApp(unittest.TestCase):
 
         response_401 = self.client.post('/api/users/update',
                                         headers={'Content-Type': 'application/json',
-                                                'Authorization': f'Bearer {token_401}'
+                                                 'Authorization': f'Bearer {token_401}'
                                                 },
                                         data=json.dumps({'username': 'Notgonnawork'}),
                                         follow_redirects=True
@@ -173,7 +167,6 @@ class TestFlaskApp(unittest.TestCase):
         assert response_401.request.path == '/api/users/update'
         assert user.username == 'Changed'
 
-
     def test_user_logout(self):
         '''
         Given a test client, attempt to log user out with JWT token. Verify
@@ -184,7 +177,7 @@ class TestFlaskApp(unittest.TestCase):
 
         response_200 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
-                                                'Authorization': f'Bearer {token_200}'
+                                                 'Authorization': f'Bearer {token_200}'
                                                 },
                                         follow_redirects=True
                                         )
@@ -193,7 +186,7 @@ class TestFlaskApp(unittest.TestCase):
 
         response_401 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
-                                                'Authorization': f'Bearer {token_401}'
+                                                 'Authorization': f'Bearer {token_401}'
                                                 },
                                         follow_redirects=True
                                         )

@@ -1,0 +1,25 @@
+version: '3.7'
+
+services:
+
+  api:
+    container_name: flask-container
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    entrypoint: python run.py
+    env_file:
+      - server/.env
+
+  client:
+    container_name: react-datta-container
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    volumes:
+      - '.:/app'
+      - '/app/node_modules'
+    ports:
+      - 3000:80
+    environment:
+      - CHOKIDAR_USEPOLLING=true

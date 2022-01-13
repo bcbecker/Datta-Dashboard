@@ -22,7 +22,7 @@ const NavRight = () => {
 
     const handleLogout = () => {
         axios
-            .post(API_SERVER + 'users/logout', {}, { headers: { Authorization: `${account.token}` } })
+            .post(API_SERVER + 'users/logout', {}, { headers: { Authorization: `Bearer ${account.token}` } })
             .then(function (response) {
                 // Force the LOGOUT
                 if (response.data.success) {

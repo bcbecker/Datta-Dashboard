@@ -6,7 +6,6 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 import axios from 'axios';
 
 import ChatList from './ChatList';
-import { API_SERVER } from '../../../../config/constant';
 import { LOGOUT } from './../../../../store/actions';
 
 import avatar1 from '../../../../assets/images/user/avatar-1.jpg';
@@ -22,7 +21,7 @@ const NavRight = () => {
 
     const handleLogout = () => {
         axios
-            .post(API_SERVER + 'users/logout', {}, { headers: { Authorization: `Bearer ${account.token}` } })
+            .post('/api/users/logout', {}, { headers: { Authorization: `Bearer ${account.token}` } })
             .then(function (response) {
                 // Force the LOGOUT
                 if (response.data.success) {

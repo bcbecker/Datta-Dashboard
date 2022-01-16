@@ -6,7 +6,6 @@ import * as Yup from 'yup';
 import { Formik } from 'formik';
 import axios from 'axios';
 import useScriptRef from '../../../hooks/useScriptRef';
-import { API_SERVER } from './../../../config/constant';
 
 const RestRegister = ({ className, ...rest }) => {
     let history = useHistory();
@@ -29,7 +28,7 @@ const RestRegister = ({ className, ...rest }) => {
                 onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
                     try {
                         axios
-                            .post(API_SERVER + 'users/signup', {
+                            .post('/api/users/signup', {
                                 username: values.username,
                                 password: values.password,
                                 email: values.email

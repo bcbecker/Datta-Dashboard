@@ -6,7 +6,6 @@ import * as Yup from 'yup';
 import { Formik } from 'formik';
 import axios from 'axios';
 import useScriptRef from '../../../hooks/useScriptRef';
-import { API_SERVER } from './../../../config/constant';
 import { ACCOUNT_INITIALIZE } from './../../../store/actions';
 
 const RestLogin = ({ className, ...rest }) => {
@@ -28,7 +27,7 @@ const RestLogin = ({ className, ...rest }) => {
                 onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
                     try {
                         axios
-                            .post(API_SERVER + 'users/login', {
+                            .post('/api/users/login', {
                                 password: values.password,
                                 email: values.email
                             })

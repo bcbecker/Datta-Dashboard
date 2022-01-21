@@ -57,7 +57,7 @@ class Signup(Resource):
 
             return ({'success': True,
                      'msg': 'Successfully registered.',
-                     'user': new_user.to_json(),
+                     'user': new_user.username,
                      }, 201)
         else:
             return ({'success': False,
@@ -86,7 +86,7 @@ class Login(Resource):
                     }, 401)
 
         if user.check_password(_password):
-            token = create_access_token(identity=user.email)  # should be public_id
+            token = create_access_token(identity=user.public_id)
             user.jwt_auth = True
             user.save()
 
@@ -109,14 +109,14 @@ class UpdateUser (Resource):
     '''
     @users_api.expect(update_user_model)
     @jwt_required()
-    def post(self):
+    def put(self):
 
         request_data = request.get_json()
         _new_username = request_data.get('username')
         _new_email = request_data.get('email')
         _new_password = request_data.get('password')
 
-        user = User.query.filter_by(email=get_jwt_identity()).first()
+        user = User.query.filter_by(public_id=get_jwt_identity()).first()
 
         if not user:
             return ({'success': False,
@@ -146,12 +146,11 @@ class LogoutUser(Resource):
     @jwt_required()
     def post(self):
 
-        user = User.query.filter_by(email=get_jwt_identity()).first()
+        user = User.query.filter_by(public_id=get_jwt_identity()).first()
 
         if user:
             user.jwt_auth = False
-            #TODO: regen public_id?
-            #user.public_id = str(uuid.uuid4())
+            user.public_id = str(uuid.uuid4())
             user.save()
 
             _jwt_token = request.headers["Authorization"].split(" ")[1]
@@ -160,7 +159,7 @@ class LogoutUser(Resource):
 
             return ({'success': True,
                     'msg': 'Successfully logged out.',
-                    'user': user.to_json()
+                    'user': user.username
                     }, 200)
                     
         return ({'success': False,

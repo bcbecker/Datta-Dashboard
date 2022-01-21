@@ -81,7 +81,7 @@ class TestFlaskApp(unittest.TestCase):
         assert response_201.request.path == '/api/users/signup'
         assert response_202.status_code == 202
         assert response_202.request.path == '/api/users/signup'
-        assert user.username == 'Testing'
+        assert user.username == data['username']
         assert user.jwt_auth == False
         assert user is not None
         assert isinstance(user.to_json(), dict)      
@@ -139,9 +139,10 @@ class TestFlaskApp(unittest.TestCase):
         for a successful creation.
         '''
 
-        token_200 = create_access_token(identity='admin@gmail.com')
+        user = User.query.filter_by(email='admin@gmail.com').first()
+        token_200 = create_access_token(identity=user.public_id)
 
-        response_200 = self.client.post('/api/users/update',
+        response_200 = self.client.put('/api/users/update',
                                         headers={'Content-Type': 'application/json',
                                                  'Authorization': f'Bearer {token_200}'
                                                 },
@@ -149,17 +150,15 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True
                                         )
 
-        token_401 = create_access_token(identity='testing@gmail.com')
+        token_401 = create_access_token(identity='1234567890')
 
-        response_401 = self.client.post('/api/users/update',
+        response_401 = self.client.put('/api/users/update',
                                         headers={'Content-Type': 'application/json',
                                                  'Authorization': f'Bearer {token_401}'
                                                 },
                                         data=json.dumps({'username': 'Notgonnawork'}),
                                         follow_redirects=True
                                         )
-
-        user = User.query.filter_by(email='admin@gmail.com').first()
 
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/update'
@@ -173,7 +172,8 @@ class TestFlaskApp(unittest.TestCase):
         status codes and blocklisted JWT for successful creation.
         '''
 
-        token_200 = create_access_token(identity='admin@gmail.com')
+        user = User.query.filter_by(email='admin@gmail.com').first()
+        token_200 = create_access_token(identity=user.public_id)
 
         response_200 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True
                                         )
 
-        token_401 = create_access_token(identity='testing@gmail.com')
+        token_401 = create_access_token(identity='1234567890')
 
         response_401 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
@@ -191,7 +191,6 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True
                                         )
 
-        user = User.query.filter_by(email='admin@gmail.com').first()
         blocked_token = JWTBlocklist.query.filter_by(jwt_token=token_200).first()
 
         assert response_200.status_code == 200

@@ -26,4 +26,9 @@ def create_app(config_class=DevelopmentConfig):
     from .users_api.routes import users_api
     users_api.init_app(app)
 
+    # Add cli commands
+    from .cli import test, prune_expired_tokens
+    app.cli.add_command(test)
+    app.cli.add_command(prune_expired_tokens)
+
     return app

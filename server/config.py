@@ -16,9 +16,12 @@ class Config:
     JWT_COOKIE_SECURE = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
 
+    REDIS_URL = os.environ.get('REDIS_URL')
+
 
 class ProductionConfig(Config):
-    #SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://')
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'DATABASE_URL').replace('postgres://', 'postgresql://')
     FLASK_ENV = 'production'
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
@@ -36,3 +39,11 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     TESTING = True
+
+
+configs = {
+           'Config': Config,
+           'ProductionConfig': ProductionConfig,
+           'DevelopmentConfig': DevelopmentConfig,
+           'TestingConfig': TestingConfig
+           }

@@ -17,10 +17,3 @@ def test(directory):
         os.system(f'pytest --cov={directory} -v')
         os.system('rm .coverage')
 
-
-@click.command('prune-expired-tokens')
-@with_appcontext
-def prune_expired_tokens():
-    '''Remove tokens from JWTBlocklist that are expired'''
-    print('This command has not yet been set up')
-    pass

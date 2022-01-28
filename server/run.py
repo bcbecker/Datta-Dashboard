@@ -1,12 +1,15 @@
-from app.models import User, JWTBlocklist
+from app.models import User
 from app import create_app, db
+from config import configs
 
-app = create_app()
+
+# Config, ProductionConfig, DevelopmentConfig, TestingConfig
+app = create_app(config_class=configs['DevelopmentConfig'])
 
 
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User, 'JWTBlocklist': JWTBlocklist}
+    return {'db': db, 'User': User}
 
 
 if __name__ == "__main__":

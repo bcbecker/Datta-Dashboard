@@ -33,16 +33,3 @@ class User(db.Model):
 
     def to_json(self):
         return self.to_dict()
-
-
-class JWTBlocklist(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    jwt_token = db.Column(db.String(), nullable=False, index=True)
-    time_created = db.Column(db.DateTime(), nullable=False, default=datetime.utcnow)
-
-    def __repr__(self):
-        return f'Expired Token: {self.jwt_token}'
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()

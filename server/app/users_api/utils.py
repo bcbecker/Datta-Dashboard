@@ -1,6 +1,5 @@
-from flask import request
+from flask import current_app
 from .. import jwt
-from ..models import JWTBlocklist
 
 '''
 Utility functions for setting up custom JWT callbacks
@@ -11,9 +10,9 @@ Utility functions for setting up custom JWT callbacks
 def is_token_in_blocklist(jwt_header: dict, jwt_payload: dict):
     '''
     Custom callback for checking a @jwt_required route to make sure the token
-    has not been revoked (added to JWTBlocklist)
+    has not been revoked (added to redis blocklist)
     '''
-    _jwt_token = request.headers["Authorization"]
-    blocked_jwt_token = JWTBlocklist.query.filter_by(jwt_token=_jwt_token).one_or_none()
+    jti = jwt_payload['jti']
+    token_in_redis = current_app.redis_blocklist.get(jti)
 
-    return blocked_jwt_token is not None
+    return token_in_redis is not None

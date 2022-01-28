@@ -1,8 +1,9 @@
 import uuid
-from flask import request
+from flask import current_app, request
 from flask_restx import Api, Resource, fields
-from flask_jwt_extended import (create_access_token, get_jwt_identity, jwt_required)
-from ..models import User, JWTBlocklist
+from flask_jwt_extended import (
+    create_access_token, get_jwt_identity, jwt_required, get_jwt)
+from ..models import User
 from .utils import is_token_in_blocklist
 
 
@@ -141,7 +142,7 @@ class UpdateUser (Resource):
 @users_api.route('/api/users/logout')
 class LogoutUser(Resource):
     '''
-    Logs user out, adding their JWT to JWTBlocklist
+    Logs user out, adding their JWT to redis_blocklist
     '''
     @jwt_required()
     def post(self):
@@ -153,9 +154,8 @@ class LogoutUser(Resource):
             user.public_id = str(uuid.uuid4())
             user.save()
 
-            _jwt_token = request.headers["Authorization"].split(" ")[1]
-            jwt_token_blocked = JWTBlocklist(jwt_token=_jwt_token)
-            jwt_token_blocked.save()
+            _jti = get_jwt()['jti']
+            current_app.redis_blocklist.setex(_jti, current_app.TTL, '')
 
             return ({'success': True,
                     'msg': 'Successfully logged out.',
@@ -165,3 +165,4 @@ class LogoutUser(Resource):
         return ({'success': False,
                  'msg': 'User not found'
                 }, 401)
+

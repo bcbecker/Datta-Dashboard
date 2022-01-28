@@ -1,8 +1,9 @@
+from redis import Redis
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
-from config import DevelopmentConfig
+from config import Config
 
 
 db = SQLAlchemy()
@@ -10,12 +11,16 @@ bcrypt = Bcrypt()
 jwt = JWTManager()
 
 
-def create_app(config_class=DevelopmentConfig):
+def create_app(config_class=Config):
     '''
     Binds all necessary objects to app instance, registers blueprints, configs from .env
     '''
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # Redis blocklist config and time to live
+    app.redis_blocklist = Redis.from_url(app.config['REDIS_URL'])
+    app.TTL = app.config['JWT_ACCESS_TOKEN_EXPIRES']
 
     # Bind any packages here
     db.init_app(app)
@@ -27,8 +32,7 @@ def create_app(config_class=DevelopmentConfig):
     users_api.init_app(app)
 
     # Add cli commands
-    from .cli import test, prune_expired_tokens
+    from .cli import test
     app.cli.add_command(test)
-    app.cli.add_command(prune_expired_tokens)
 
     return app

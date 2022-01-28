@@ -28,8 +28,8 @@ def create_app(config_class=Config):
     jwt.init_app(app)
 
     # Register any blueprints here
-    from .users_api.routes import users_api
-    users_api.init_app(app)
+    from .auth.routes import auth
+    auth.init_app(app)
 
     # Add cli commands
     from .cli import test

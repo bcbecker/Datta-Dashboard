@@ -7,35 +7,35 @@ from ..models import User
 from .utils import is_token_in_blocklist
 
 
-users_api = Api(version="1.0", title="Users API")
+auth = Api(version="1.0", title="User Auth")
 
 
 '''
 Flask-Restx models for associated user request format
 '''
 
-signup_user_model = users_api.model('SignupModel', {"username": fields.String(required=True, min_length=5, max_length=50),
+signup_user_model = auth.model('SignupModel', {"username": fields.String(required=True, min_length=5, max_length=50),
                                                     "email": fields.String(required=True, min_length=5, max_length=100),
                                                     "password": fields.String(required=True, min_length=8, max_length=50),
                                                     })
 
-login_user_model = users_api.model('LoginModel', {"email": fields.String(required=True, min_length=5, max_length=100),
+login_user_model = auth.model('LoginModel', {"email": fields.String(required=True, min_length=5, max_length=100),
                                                   "password": fields.String(required=True, min_length=8, max_length=50),
                                                   })
 
-update_user_model = users_api.model('UpdateModel', {"userID": fields.String(required=True, min_length=5, max_length=50),
+update_user_model = auth.model('UpdateModel', {"userID": fields.String(required=True, min_length=5, max_length=50),
                                                     "username": fields.String(required=True, min_length=5, max_length=50),
                                                     "email": fields.String(required=True, min_length=5, max_length=100)
                                                     })
 
 
-@users_api.route('/api/users/signup')
+@auth.route('/api/users/signup')
 class Signup(Resource):
     '''
     Takes signup_user_model as input and creates a new user based on the data,
     if user doesn't already exist
     '''
-    @users_api.expect(signup_user_model, validate=True)
+    @auth.expect(signup_user_model, validate=True)
     def post(self):
 
         request_data = request.get_json()
@@ -66,13 +66,13 @@ class Signup(Resource):
                     }, 202)
 
 
-@users_api.route('/api/users/login')
+@auth.route('/api/users/login')
 class Login(Resource):
     '''
     Takes login_user_model as input and logs user in if passwords match,
     creating JWT for auth to be sent to protected endpoints
     '''
-    @users_api.expect(login_user_model, validate=True)
+    @auth.expect(login_user_model, validate=True)
     def post(self):
 
         request_data = request.get_json()
@@ -102,13 +102,13 @@ class Login(Resource):
                 }, 403)
 
 
-@users_api.route('/api/users/update')
+@auth.route('/api/users/update')
 class UpdateUser (Resource):
     '''
     Takes update_user_model as input and updates their data if they provide a valid JWT
     and the user exists
     '''
-    @users_api.expect(update_user_model)
+    @auth.expect(update_user_model)
     @jwt_required()
     def put(self):
 
@@ -139,7 +139,7 @@ class UpdateUser (Resource):
                 }, 200)
 
 
-@users_api.route('/api/users/logout')
+@auth.route('/api/users/logout')
 class LogoutUser(Resource):
     '''
     Logs user out, adding their JWT to redis_blocklist

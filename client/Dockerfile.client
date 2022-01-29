@@ -9,9 +9,9 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 
 # install app dependencies, build
-COPY client/package.json client/yarn.lock ./
-COPY client/src ./src
-COPY client/public ./public
+COPY ./client/package.json ./client/yarn.lock ./
+COPY ./client/src/. ./src
+COPY ./client/public/. ./public
 RUN yarn install
 RUN yarn add react-scripts@4.0.0
 RUN yarn build
@@ -19,4 +19,4 @@ RUN yarn build
 # Build step #2: nginx container with yarn build
 FROM nginx:stable-alpine
 COPY --from=build-step /app/build /usr/share/nginx/html
-COPY nginx.default.conf /etc/nginx/conf.d/default.conf
+COPY _deployment/nginx/nginx.default.conf /etc/nginx/conf.d/default.conf

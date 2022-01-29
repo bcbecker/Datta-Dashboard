@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Redis RDB files
+redis-jwt-data
+.rdb
+
 # Distribution / packaging
 .Python
 build/

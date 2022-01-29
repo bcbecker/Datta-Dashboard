@@ -1,0 +1,9 @@
+# Dockerfile for Postgres db
+
+FROM postgres:alpine
+
+ADD db_scripts/init.sql /docker-entrypoint-initdb.d
+
+RUN chmod a+r /docker-entrypoint-initdb.d/*
+
+EXPOSE 5432

@@ -2,9 +2,9 @@ import unittest
 import uuid
 import json
 from flask import current_app
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, get_jti
 from app import create_app, db
-from app.models import User, JWTBlocklist
+from app.models import User
 from config import TestingConfig
 
 
@@ -38,8 +38,7 @@ class TestFlaskApp(unittest.TestCase):
         user = User(
                 public_id=str(uuid.uuid4()),
                 username='Admin',
-                email='admin@gmail.com',
-                jwt_auth=False
+                email='admin@gmail.com'
             )
         user.set_password('adminisabadpassword')
         user.save()
@@ -82,7 +81,6 @@ class TestFlaskApp(unittest.TestCase):
         assert response_202.status_code == 202
         assert response_202.request.path == '/api/users/signup'
         assert user.username == data['username']
-        assert user.jwt_auth == False
         assert user is not None
         assert isinstance(user.to_json(), dict)      
     
@@ -130,7 +128,6 @@ class TestFlaskApp(unittest.TestCase):
         assert response_403.status_code == 403
         assert response_403.request.path == '/api/users/login'
         assert response_403.json.get('token') is None
-        assert user.jwt_auth == True
 
     def test_user_update(self):
         '''
@@ -191,12 +188,10 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True
                                         )
 
-        blocked_token = JWTBlocklist.query.filter_by(jwt_token=token_200).first()
+        blocked_token = current_app.redis_blocklist.get(get_jti(token_200))
 
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/logout'
         assert response_401.status_code == 401
         assert response_401.request.path == '/api/users/logout'
-        assert user.jwt_auth == False
         assert blocked_token is not None
-        assert isinstance(blocked_token.jwt_token, str)

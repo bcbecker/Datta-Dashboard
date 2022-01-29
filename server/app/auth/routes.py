@@ -15,18 +15,18 @@ Flask-Restx models for associated user request format
 '''
 
 signup_user_model = auth.model('SignupModel', {"username": fields.String(required=True, min_length=5, max_length=50),
-                                                    "email": fields.String(required=True, min_length=5, max_length=100),
-                                                    "password": fields.String(required=True, min_length=8, max_length=50),
-                                                    })
+                                               "email": fields.String(required=True, min_length=5, max_length=100),
+                                               "password": fields.String(required=True, min_length=8, max_length=50),
+                                               })
 
 login_user_model = auth.model('LoginModel', {"email": fields.String(required=True, min_length=5, max_length=100),
-                                                  "password": fields.String(required=True, min_length=8, max_length=50),
-                                                  })
+                                             "password": fields.String(required=True, min_length=8, max_length=50),
+                                             })
 
 update_user_model = auth.model('UpdateModel', {"userID": fields.String(required=True, min_length=5, max_length=50),
-                                                    "username": fields.String(required=True, min_length=5, max_length=50),
-                                                    "email": fields.String(required=True, min_length=5, max_length=100)
-                                                    })
+                                               "username": fields.String(required=True, min_length=5, max_length=50),
+                                               "email": fields.String(required=True, min_length=5, max_length=100)
+                                               })
 
 
 @auth.route('/api/users/signup')
@@ -49,8 +49,7 @@ class Signup(Resource):
             new_user = User(
                 public_id=str(uuid.uuid4()),
                 username=_username,
-                email=_email,
-                jwt_auth=False
+                email=_email
             )
 
             new_user.set_password(_password)
@@ -63,7 +62,7 @@ class Signup(Resource):
         else:
             return ({'success': False,
                      'msg': 'User already exists!'
-                    }, 202)
+                     }, 202)
 
 
 @auth.route('/api/users/login')
@@ -84,22 +83,20 @@ class Login(Resource):
         if not user:
             return ({'success': False,
                      'msg': 'User not found'
-                    }, 401)
+                     }, 401)
 
         if user.check_password(_password):
             token = create_access_token(identity=user.public_id)
-            user.jwt_auth = True
-            user.save()
 
             return ({'success': True,
                      'msg': 'Successfully logged in.',
                      'user': user.to_json(),
                      'token': token
-                    }, 200)
+                     }, 200)
 
         return ({'success': False,
                  'msg': 'Could not verify credentials'
-                }, 403)
+                 }, 403)
 
 
 @auth.route('/api/users/update')
@@ -122,7 +119,7 @@ class UpdateUser (Resource):
         if not user:
             return ({'success': False,
                      'msg': 'User not found'
-                    }, 401)
+                     }, 401)
 
         if _new_username:
             user.username = _new_username
@@ -136,7 +133,7 @@ class UpdateUser (Resource):
         return ({'success': True,
                  'msg': 'Successfully updated user.',
                  'user': user.to_json()
-                }, 200)
+                 }, 200)
 
 
 @auth.route('/api/users/logout')
@@ -150,7 +147,6 @@ class LogoutUser(Resource):
         user = User.query.filter_by(public_id=get_jwt_identity()).first()
 
         if user:
-            user.jwt_auth = False
             user.public_id = str(uuid.uuid4())
             user.save()
 
@@ -158,11 +154,10 @@ class LogoutUser(Resource):
             current_app.redis_blocklist.setex(_jti, current_app.TTL, '')
 
             return ({'success': True,
-                    'msg': 'Successfully logged out.',
-                    'user': user.username
-                    }, 200)
-                    
+                     'msg': 'Successfully logged out.',
+                     'user': user.username
+                     }, 200)
+
         return ({'success': False,
                  'msg': 'User not found'
-                }, 401)
-
+                 }, 401)

@@ -8,7 +8,6 @@ class User(db.Model):
     username = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(70), nullable=False, unique=True, index=True)
     password = db.Column(db.String(80), nullable=False)
-    jwt_auth = db.Column(db.Boolean(), nullable=False)
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
     def __repr__(self):

@@ -2,7 +2,7 @@ import unittest
 import uuid
 import json
 from flask import current_app
-from flask_jwt_extended import create_access_token, get_jti
+from flask_jwt_extended import create_access_token, get_jti, get_csrf_token
 from app import create_app, db
 from app.models import User
 from config import TestingConfig
@@ -49,6 +49,7 @@ class TestFlaskApp(unittest.TestCase):
         '''
         assert self.app is not None
         assert current_app == self.app
+        assert current_app.redis_blocklist is not None
 
     def test_user_signup(self):
         '''
@@ -117,17 +118,15 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True 
                                         )
 
-        user = User.query.filter_by(email='admin@gmail.com').first()
-
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/login'
-        assert response_200.json.get('token') is not None
+        assert response_200.json.get('csrf_token') is not None
         assert response_401.status_code == 401
         assert response_401.request.path == '/api/users/login'
-        assert response_401.json.get('token') is None
+        assert response_401.json.get('csrf_token') is None
         assert response_403.status_code == 403
         assert response_403.request.path == '/api/users/login'
-        assert response_403.json.get('token') is None
+        assert response_403.json.get('csrf_token') is None
 
     def test_user_update(self):
         '''
@@ -137,21 +136,24 @@ class TestFlaskApp(unittest.TestCase):
         '''
 
         user = User.query.filter_by(email='admin@gmail.com').first()
+
         token_200 = create_access_token(identity=user.public_id)
 
+        self.client.set_cookie('localhost', 'access_token_cookie', token_200, httponly=True)
         response_200 = self.client.put('/api/users/update',
-                                        headers={'Content-Type': 'application/json',
-                                                 'Authorization': f'Bearer {token_200}'
-                                                },
-                                        data=json.dumps({'username': 'Changed'}),
-                                        follow_redirects=True
-                                        )
+                                            headers={'Content-Type': 'application/json',
+                                                     'X-CSRF-TOKEN': f'{get_csrf_token(token_200)}'
+                                                    },
+                                            data=json.dumps({'username': 'Changed'}),
+                                            follow_redirects=True
+                                            )
 
         token_401 = create_access_token(identity='1234567890')
 
+        self.client.set_cookie('localhost', 'access_token_cookie', token_401, httponly=True)
         response_401 = self.client.put('/api/users/update',
                                         headers={'Content-Type': 'application/json',
-                                                 'Authorization': f'Bearer {token_401}'
+                                                 'X-CSRF-TOKEN': f'{get_csrf_token(token_401)}'
                                                 },
                                         data=json.dumps({'username': 'Notgonnawork'}),
                                         follow_redirects=True
@@ -170,20 +172,23 @@ class TestFlaskApp(unittest.TestCase):
         '''
 
         user = User.query.filter_by(email='admin@gmail.com').first()
+
         token_200 = create_access_token(identity=user.public_id)
+        self.client.set_cookie('localhost', 'access_token_cookie', token_200, httponly=True)
 
         response_200 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
-                                                 'Authorization': f'Bearer {token_200}'
+                                                 'X-CSRF-TOKEN': f'{get_csrf_token(token_200)}'
                                                 },
                                         follow_redirects=True
                                         )
 
         token_401 = create_access_token(identity='1234567890')
+        self.client.set_cookie('localhost', 'access_token_cookie', token_401, httponly=True)
 
         response_401 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
-                                                 'Authorization': f'Bearer {token_401}'
+                                                 'X-CSRF-TOKEN': f'{get_csrf_token(token_401)}'
                                                 },
                                         follow_redirects=True
                                         )

@@ -1,8 +1,9 @@
 import uuid
-from flask import current_app, request
+from flask import current_app, request, jsonify, make_response
 from flask_restx import Api, Resource, fields
 from flask_jwt_extended import (
-    create_access_token, get_jwt_identity, jwt_required, get_jwt)
+    create_access_token, get_jwt_identity, jwt_required, get_jwt,
+    set_access_cookies, unset_access_cookies, get_csrf_token)
 from ..models import User
 from .utils import is_token_in_blocklist
 
@@ -88,11 +89,14 @@ class Login(Resource):
         if user.check_password(_password):
             token = create_access_token(identity=user.public_id)
 
-            return ({'success': True,
-                     'msg': 'Successfully logged in.',
-                     'user': user.to_json(),
-                     'token': token
-                     }, 200)
+            response = jsonify({'success': True,
+                                'msg': 'Successfully logged in.',
+                                'user': user.to_json(),
+                                'csrf_token': get_csrf_token(token)
+                                })
+
+            set_access_cookies(response, token)
+            return make_response(response, 200)
 
         return ({'success': False,
                  'msg': 'Could not verify credentials'
@@ -153,10 +157,13 @@ class LogoutUser(Resource):
             _jti = get_jwt()['jti']
             current_app.redis_blocklist.setex(_jti, current_app.TTL, '')
 
-            return ({'success': True,
-                     'msg': 'Successfully logged out.',
-                     'user': user.username
-                     }, 200)
+            response = jsonify({'success': True,
+                                'msg': 'Successfully logged out.',
+                                'user': user.username
+                                })
+
+            unset_access_cookies(response)
+            return make_response(response, 200)
 
         return ({'success': False,
                  'msg': 'User not found'

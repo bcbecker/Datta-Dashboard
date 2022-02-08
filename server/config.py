@@ -12,9 +12,11 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
-    JWT_TOKEN_LOCATION = ['headers']
-    JWT_COOKIE_SECURE = False
+    JWT_TOKEN_LOCATION = ['cookies']
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
+    JWT_COOKIE_SECURE = False
+    JWT_COOKIE_CSRF_PROTECT = True
+    JWT_CSRF_IN_COOKIES = False
 
     REDIS_URL = os.environ.get('REDIS_URL')
 
@@ -23,10 +25,6 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL').replace('postgres://', 'postgresql://')
     FLASK_ENV = 'production'
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_SECURE = True
-    REMEMBER_COOKIE_HTTPONLY = True
     JWT_COOKIE_SECURE = True
     DEBUG = False
 

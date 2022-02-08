@@ -21,7 +21,7 @@ const NavRight = () => {
 
     const handleLogout = () => {
         axios
-            .post('/api/users/logout', {}, { headers: { Authorization: `Bearer ${account.token}` } })
+            .post('/api/users/logout', {}, { headers: { 'X-CSRF-TOKEN': `${account.csrf_token}` } })
             .then(function (response) {
                 // Force the LOGOUT
                 if (response.data.success) {

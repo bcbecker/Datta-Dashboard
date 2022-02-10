@@ -15,18 +15,17 @@ auth = Api(version="1.0", title="User Auth")
 Flask-Restx models for associated user request format
 '''
 
-signup_user_model = auth.model('SignupModel', {"username": fields.String(required=True, min_length=5, max_length=50),
-                                               "email": fields.String(required=True, min_length=5, max_length=100),
+signup_user_model = auth.model('SignupModel', {"username": fields.String(required=True, min_length=3, max_length=50),
+                                               "email": fields.String(required=True, min_length=5, max_length=75),
                                                "password": fields.String(required=True, min_length=8, max_length=50),
                                                })
 
-login_user_model = auth.model('LoginModel', {"email": fields.String(required=True, min_length=5, max_length=100),
+login_user_model = auth.model('LoginModel', {"email": fields.String(required=True, min_length=5, max_length=75),
                                              "password": fields.String(required=True, min_length=8, max_length=50),
                                              })
 
-update_user_model = auth.model('UpdateModel', {"userID": fields.String(required=True, min_length=5, max_length=50),
-                                               "username": fields.String(required=True, min_length=5, max_length=50),
-                                               "email": fields.String(required=True, min_length=5, max_length=100)
+update_user_model = auth.model('UpdateModel', {"username": fields.String(required=True, min_length=3, max_length=50),
+                                               "email": fields.String(required=True, min_length=5, max_length=75)
                                                })
 
 
@@ -116,7 +115,6 @@ class UpdateUser (Resource):
         request_data = request.get_json()
         _new_username = request_data.get('username')
         _new_email = request_data.get('email')
-        _new_password = request_data.get('password')
 
         user = User.query.filter_by(public_id=get_jwt_identity()).first()
 
@@ -129,8 +127,6 @@ class UpdateUser (Resource):
             user.username = _new_username
         if _new_email:
             user.email = _new_email
-        if _new_password:
-            user.set_password(_new_password)
 
         user.save()
 

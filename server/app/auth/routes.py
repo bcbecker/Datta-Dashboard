@@ -90,8 +90,7 @@ class Login(Resource):
 
             response = jsonify({'success': True,
                                 'msg': 'Successfully logged in.',
-                                'user': user.to_json(),
-                                'csrf_token': get_csrf_token(token)
+                                'user': user.to_json()
                                 })
 
             set_access_cookies(response, token)

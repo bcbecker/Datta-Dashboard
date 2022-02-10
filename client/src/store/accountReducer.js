@@ -2,7 +2,6 @@
 import { ACCOUNT_INITIALIZE, LOGIN, LOGOUT } from './actions';
 
 export const initialState = {
-    csrf_token: '',
     isLoggedIn: false,
     isInitialized: false,
     user: null
@@ -13,12 +12,11 @@ export const initialState = {
 const accountReducer = (state = initialState, action) => {
     switch (action.type) {
         case ACCOUNT_INITIALIZE: {
-            const { isLoggedIn, user, csrf_token } = action.payload;
+            const { isLoggedIn, user } = action.payload;
             return {
                 ...state,
                 isLoggedIn,
                 isInitialized: true,
-                csrf_token,
                 user
             };
         }
@@ -34,7 +32,6 @@ const accountReducer = (state = initialState, action) => {
             return {
                 ...state,
                 isLoggedIn: false,
-                csrf_token: '',
                 user: null
             };
         }

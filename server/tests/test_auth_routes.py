@@ -118,15 +118,17 @@ class TestFlaskApp(unittest.TestCase):
                                         follow_redirects=True 
                                         )
 
+        user = User.query.filter_by(email='admin@gmail.com').first()
+
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/login'
-        assert response_200.json.get('csrf_token') is not None
+        assert response_200.get_json()['user'] == user.to_json()
+
         assert response_401.status_code == 401
         assert response_401.request.path == '/api/users/login'
-        assert response_401.json.get('csrf_token') is None
+
         assert response_403.status_code == 403
         assert response_403.request.path == '/api/users/login'
-        assert response_403.json.get('csrf_token') is None
 
     def test_user_update(self):
         '''
@@ -138,8 +140,9 @@ class TestFlaskApp(unittest.TestCase):
         user = User.query.filter_by(email='admin@gmail.com').first()
 
         token_200 = create_access_token(identity=user.public_id)
-
         self.client.set_cookie('localhost', 'access_token_cookie', token_200, httponly=True)
+        self.client.set_cookie('localhost', 'csrf_access_token', get_csrf_token(token_200))
+        
         response_200 = self.client.put('/api/users/update',
                                             headers={'Content-Type': 'application/json',
                                                      'X-CSRF-TOKEN': f'{get_csrf_token(token_200)}'
@@ -149,8 +152,9 @@ class TestFlaskApp(unittest.TestCase):
                                             )
 
         token_401 = create_access_token(identity='1234567890')
-
         self.client.set_cookie('localhost', 'access_token_cookie', token_401, httponly=True)
+        self.client.set_cookie('localhost', 'csrf_access_token', get_csrf_token(token_401))
+        
         response_401 = self.client.put('/api/users/update',
                                         headers={'Content-Type': 'application/json',
                                                  'X-CSRF-TOKEN': f'{get_csrf_token(token_401)}'
@@ -161,8 +165,15 @@ class TestFlaskApp(unittest.TestCase):
 
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/update'
+        assert response_200.request.cookies.get('access_token_cookie')
+        assert response_200.request.cookies.get('csrf_access_token')
+        assert response_200.get_json()['user'] == user.to_json()
+
         assert response_401.status_code == 401
         assert response_401.request.path == '/api/users/update'
+        assert response_401.request.cookies.get('access_token_cookie')
+        assert response_401.request.cookies.get('csrf_access_token')
+
         assert user.username == 'Changed'
 
     def test_user_logout(self):
@@ -175,7 +186,8 @@ class TestFlaskApp(unittest.TestCase):
 
         token_200 = create_access_token(identity=user.public_id)
         self.client.set_cookie('localhost', 'access_token_cookie', token_200, httponly=True)
-
+        self.client.set_cookie('localhost', 'csrf_access_token', get_csrf_token(token_200))
+        
         response_200 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
                                                  'X-CSRF-TOKEN': f'{get_csrf_token(token_200)}'
@@ -185,6 +197,7 @@ class TestFlaskApp(unittest.TestCase):
 
         token_401 = create_access_token(identity='1234567890')
         self.client.set_cookie('localhost', 'access_token_cookie', token_401, httponly=True)
+        self.client.set_cookie('localhost', 'csrf_access_token', get_csrf_token(token_401))
 
         response_401 = self.client.post('/api/users/logout',
                                         headers={'Content-Type': 'application/json',
@@ -197,6 +210,13 @@ class TestFlaskApp(unittest.TestCase):
 
         assert response_200.status_code == 200
         assert response_200.request.path == '/api/users/logout'
+        assert response_200.request.cookies.get('access_token_cookie')
+        assert response_200.request.cookies.get('csrf_access_token')
+        assert response_200.get_json()['user'] == user.username
+
         assert response_401.status_code == 401
         assert response_401.request.path == '/api/users/logout'
+        assert response_401.request.cookies.get('access_token_cookie')
+        assert response_401.request.cookies.get('csrf_access_token')
+
         assert blocked_token is not None

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import Cookies from 'js-cookie';
+import { useDispatch } from 'react-redux';
 import { ListGroup, Dropdown, Media } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import PerfectScrollbar from 'react-perfect-scrollbar';
@@ -14,14 +15,13 @@ import avatar3 from '../../../../assets/images/user/avatar-3.jpg';
 import avatar4 from '../../../../assets/images/user/avatar-4.jpg';
 
 const NavRight = () => {
-    const account = useSelector((state) => state.account);
     const dispatcher = useDispatch();
 
     const [listOpen, setListOpen] = useState(false);
 
     const handleLogout = () => {
         axios
-            .post('/api/users/logout', {}, { headers: { 'X-CSRF-TOKEN': `${account.csrf_token}` } })
+            .post('/api/users/logout', {}, { headers: { 'X-CSRF-TOKEN': `${Cookies.get('csrf_access_token')}` } })
             .then(function (response) {
                 // Force the LOGOUT
                 if (response.data.success) {

@@ -19,13 +19,13 @@ def make_shell_context():
 @app.after_request
 def refresh_expiring_jwt(response):
     '''
-    Implicit token refreshing via cookies if the token is within 450 seconds (7.5 min) 
-    of expiring. Hanlded after each request.
+    Implicit token refreshing via cookies if the token is over halfway to its time to
+    live (TTL). Hanlded after each request.
     '''
     try:
         exp_timestamp = get_jwt()["exp"]
         now = datetime.now(timezone.utc)
-        target_timestamp = datetime.timestamp(now + timedelta(seconds=450))
+        target_timestamp = datetime.timestamp(now + timedelta(seconds=(app.TTL.seconds // 2)))
 
         if target_timestamp > exp_timestamp:
             access_token = create_access_token(identity=get_jwt_identity())

@@ -3,7 +3,7 @@ from flask import current_app, request, jsonify, make_response
 from flask_restx import Api, Resource, fields
 from flask_jwt_extended import (
     create_access_token, get_jwt_identity, jwt_required, get_jwt,
-    set_access_cookies, unset_access_cookies, get_csrf_token)
+    set_access_cookies, unset_access_cookies)
 from ..models import User
 from .utils import is_token_in_blocklist
 

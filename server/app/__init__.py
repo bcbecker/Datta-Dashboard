@@ -37,7 +37,7 @@ def create_app(config_class=TestingConfig):
     auth.init_app(app)
 
     # Add cli commands
-    from .cli import test
+    from cli import test
     app.cli.add_command(test)
 
     return app

@@ -1,5 +1,5 @@
 # Datta-Dashboard
-Datta Dashboard is a single page user dashboard built in React as a proof of concept for using JWT-based token authentication in a microservices architecture. The Flask authentication API on the backend uses in-memory token blacklisting through Redis and a Postgres database to smoothly authenticate users for the dashboard. The deployment is handled by a network of Docker containers, hidden behind a nginx reverse proxy. Security, scaling, and data persistence methods are discussed in depth [here](#design-choices).
+Datta Dashboard is a single page user dashboard built in React as a proof of concept for using JWT-based token authentication in a microservices architecture. The Flask authentication API on the backend uses in-memory token blacklisting through Redis, and a Postgres database to smoothly authenticate users for the dashboard. The deployment is handled by a network of Docker containers, hidden behind a nginx reverse proxy. Security, scaling, and data persistence methods are discussed [here](#design-choices).
 
 There is no live deployment at this time.
 
@@ -9,19 +9,21 @@ There is no live deployment at this time.
 * [Technologies Used](#technologies-used)
 * [Project Structure](#project-structure)
 * [Features](#features)
-* [Setup](#setup-(using-Docker))
+* [Setup with Docker](#setup-with-docker)
 * [Design Choices](#design-choices)
-* [Improvements](#improvements)
+* [Improvements/To Do](#todo)
 * [Acknowledgements](#acknowledgements)
 * [Datta Able Frontend](#datta-able-react-free-admin-template)
 
 
 ## General Information
-Auth Datta Able was built as a means of hitting on key design choices used in modern applications: token-based authentication, client side routing, and a microservices architecture using containerization and a reverse proxy.
+Datta Dashboard was built as a means of hitting on key design choices used in modern applications: token-based authentication, client side routing, and a microservices architecture using containerization and a reverse proxy.
 
 In order to accomplish the token-based authentication, JWT (JSON Web Tokens) are used. Using tokens for authentication allows the backend/APIs to be as close to stateless as possible. Instead of keeping track of sessions in a database, we are only keeping track of the blacklisted tokens in Redis for a brief period of time. This means fewer database calls and less overall storage demands.
 
-Client side routing is handled by React, which changes the app's state to manage the components/html rendered in the browser, rather than reloading the page entirely. This style of webapp leads into microservices, which are a way to loosely couple each service, so that they may be easily updated or replaced without taking down the entire application. The containerization and orchestration is taken care of by Docker and docker-compose, respectively. The containerization paired with nginx makes for smooth scaling and deployment, discussed at large [here](#scaling-with-nginx).
+Client side routing is handled by React, which changes the app's state to manage the components/html rendered in the browser, rather than reloading the page entirely. This style of webapp leads into microservices, which loosely couple each service so that they may be easily updated, replaced, or scaled without taking down the entire application.
+
+The containerization and orchestration are taken care of by Docker and docker-compose, respectively. Paired with nginx as the server, this makes for smooth scaling and deployment, which is discussed in greater depth [here](#scaling-with-nginx).
 
 
 ## Technologies Used
@@ -36,12 +38,13 @@ Client side routing is handled by React, which changes the app's state to manage
 
 - Redis, with .rdb snapshotting
 - PostgreSQL, with the psycopg2 wrapper
-- SQLite for development/testing
+- SQLite for development/test db
 - nginx as a reverse proxy/server
 - Docker for containerization
 
 
 ## Project Structure
+```
 ~/datta_dashboard
     |-- docker-compose.yml
     |__ /_deployment
@@ -81,7 +84,7 @@ Client side routing is handled by React, which changes the app's state to manage
         |__ /tests
             |-- __init__.py
             |-- test_auth_routes.py
-
+```
 
 ## Features
 - User creation with input validation and sha256 password hashing
@@ -90,7 +93,7 @@ Client side routing is handled by React, which changes the app's state to manage
 - User logout with token blacklisting in Redis to prevent unauthorized use
 
 
-## Setup (using Docker)
+## Setup with Docker
 Ensure you have docker installed.
 
 ```bash
@@ -121,7 +124,7 @@ REDIS_URL=redis://<HOSTNAME>:<PORT>/<DB>
 Set the secret key(s) to whatever you'd like (though they should be secure for production). The DATABASE_URL is set aside for a production Postgres db, but the SQLALCHEMY_DATABASE_URI will suffice for testing/local development (SQLite).
 
 ### Running the CLI
-There is a CLI feature built into the Flask API. The only command added was the flask test command, which takes in a directory to gather and run tests from. In order to do this, we just need to run one command
+There is a CLI feature built into the Flask API. As of current, the only additional command is the flask test command, which gathers and runs tests from the given directory. To execute the command:
 
 ```bash
 cd server
@@ -288,7 +291,7 @@ Note: in production, nginx should redirect requests on port 80 to port 443 (http
 
 
 ## TODO
-To Do:
+TODO:
 - Expand frontend features (update user, reset password)
 - Deploy to AWS using ECS or a Linode server
 

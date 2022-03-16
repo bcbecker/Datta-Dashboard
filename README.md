@@ -248,7 +248,7 @@ COPY --from=build-step /app/build /usr/share/nginx/html
 The 'as build-step' syntax allows for a multi-stage build. After we build the React frontend, we only need to keep our /build directory, as that contains all the files needed for deployment. So, in a second build step, we pull the nginx image, and copy the /app/build directory into our nginx server. This way, we can have an nginx container that serves the built React frontend, while remaining as lightweight as possible.
 
 #### Data Persistence
-In the docker-compose file, we orchestrate the construction of each of the 4 containers, providing necessary config files and setting up volumes to persist certain data. For example, the redis container has the redis.conf file and /data directories mapped to our own config file and data storage directory.
+In the docker-compose file, we orchestrate the construction of each of the 4 containers, providing necessary config files and setting up volumes to persist certain data. For example, the redis container has the /data directory and redis.conf file mapped to our own data storage directory and config file.
 ```
 volumes:
     - ./redis/redis-jwt-data:/data

@@ -47,28 +47,8 @@ The containerization and orchestration are taken care of by Docker and docker-co
 ```
 ~/datta_dashboard
     |-- docker-compose.yml
-    |__ /_deployment
-        |__ /nginx
-            |-- nginx.default.conf
-        |__ /postgres
-            |-- Dockerfile.postgres
-            |__ /db_scripts
-                |-- init.sql
-        |__ /redis
-            |-- Dockerfile.redis
-            |-- redis.conf
-            |__ /redis-jwt-data
-                |-- jwt_dump.rdb
-    |__ /client
-        |-- Dockerfile.client
-        |-- package.json
-        |-- yarn.lock
-        |__ /public
-            |-- ...
-        |__ /src
-            |-- ...
-    |__ /server
-        |-- Dockerfile.server
+    |__ /backend
+        |-- Dockerfile.backend
         |-- run.py
         |-- cli.py
         |-- config.py
@@ -84,6 +64,24 @@ The containerization and orchestration are taken care of by Docker and docker-co
         |__ /tests
             |-- __init__.py
             |-- test_auth_routes.py
+    |__ /frontend
+        |-- Dockerfile.frontend
+        |-- nginx.default.conf
+        |-- package.json
+        |-- yarn.lock
+        |__ /public
+            |-- ...
+        |__ /src
+            |-- ...
+    |__ /postgres
+        |-- Dockerfile.postgres
+        |__ /db_scripts
+            |-- init.sql
+    |__ /redis
+        |-- Dockerfile.redis
+        |-- redis.conf
+        |__ /redis-jwt-data
+            |-- jwt_dump.rdb
 ```
 
 ## Features
@@ -103,7 +101,7 @@ docker --version
 ### Creating .env file
 For this server to run, you must create a .env file within the package, setting the following parameters:
 ```bash
-cd server
+cd backend
 touch .env
 ```
 
@@ -127,7 +125,7 @@ Set the secret key(s) to whatever you'd like (though they should be secure for p
 There is a CLI feature built into the Flask API. As of current, the only additional command is the flask test command, which gathers and runs tests from the given directory. To execute the command:
 
 ```bash
-cd server
+cd backend
 flask test app
 ```
 This will collect and run all the tests from the /app directory and generate a coverage report for each of the files in the directory.
@@ -233,14 +231,14 @@ If a request to an endpoint with the jwt_required decorator is made, and the pro
 
 ### Deployment
 #### Dockerfiles
-Notice in the project structure that there are several Dockerfiles-- 4 to be exact. Dockerfile.server sets up a container for the Flask API. Dockerfile.redis and Dockerfile.postgres set up redis and postgres containers, each based on the alpine image to keep size down. The postgres Dockerfile has a clever little maneuver:
+Notice in the project structure that there are several Dockerfiles-- 4 to be exact. Dockerfile.backend sets up a container for the Flask API. Dockerfile.redis and Dockerfile.postgres set up redis and postgres containers, each based on the alpine image to keep size down. The postgres Dockerfile has a clever little maneuver:
 ```
-ADD db_scripts/init.sql /docker-entrypoint-initdb.d
+ADD ./db_scripts/init.sql /docker-entrypoint-initdb.d
 RUN chmod a+r /docker-entrypoint-initdb.d/*
 ```
 In the /db_scripts directory, there is a .sql file called init.sql that acts as an entry point for the postgres container, pre-populating the database with the user table and a user entry. This step ensures that the database has some starting data to work with.
 
-The fourth and final Dockerfile is Dockerfile.client. Notice the following commands:
+The fourth and final Dockerfile is Dockerfile.frontend. Notice the following commands:
 ```
 FROM node:16-alpine as build-step
 ...
@@ -253,21 +251,21 @@ The 'as build-step' syntax allows for a multi-stage build. After we build the Re
 In the docker-compose file, we orchestrate the construction of each of the 4 containers, providing necessary config files and setting up volumes to persist certain data. For example, the redis container has the redis.conf file and /data directories mapped to our own config file and data storage directory.
 ```
 volumes:
-    - ./_deployment/redis/redis-jwt-data:/data
-    - ./_deployment/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    - ./redis/redis-jwt-data:/data
+    - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
 ```
 Within the config, we specified that we want Redis to persist the data in snapshots, stored as .rdb files. RDB is compact, providing fast and easy recovery measures in the instance that the container or Redis server goes down. The current config (line 382 in redis.conf) saves a snapshot every 300 seconds, if at least one record has changed. Of course, this config will need scaled with the application. The tradeoff in using RDB is that the process can be CPU intensive. The BGSAVE command allows for a non-blocking execution of this process, though it is still something to consider with your server's resources.
 
 A similar approach could be taken in the postgres container, persisting any data saved to the db while the container is running. This is exceptionally important in production, where an outage could result in permanent data loss.
 
 #### Scaling with nginx
-The microservices architecture used in this project allows for quick scaling, due in part to nginx. The only publicly-exposed port is port 3000 (http), which is our React frontend. This public port is mapped to port 80 (tcp port for http) in the nginx container, where the React content is served. The redis, postgres, and flask containers are all hidden from the public behind the nginx reverse-proxy. This creates a private network that does not need https to communicate securely. In the current configuration, the flask container can communicate with the redis and postgres containers, but they cannot communicate with outside requests. The only requests that come through are via the proxy_pass to the flask API. From the nginx.default.conf:
+The microservices architecture used in this project allows for quick scaling, due in part to nginx. The only publicly-exposed port is port 3000 (http), which is our React frontend. This public port is mapped to port 80 (tcp port for http) in the nginx container, where the React content is served. The redis, postgres, and backend containers are all hidden from the public behind the nginx reverse-proxy. This creates a private network that does not need https to communicate securely. In the current configuration, the flask backend container can only receive requests from the frontend via the proxy_pass. It can communicate with the redis and postgres containers, but they cannot communicate with the outside world. From the nginx.default.conf:
 ```
 location /api {
-        proxy_pass http://api:5000;
+        proxy_pass http://backend:5000;
     }
 ```
-This passes any requests received by nginx with the /api path to the api container, mapped to port 5000.
+This passes any requests received by nginx with the /api path to the backend container, mapped to port 5000.
 
 So what does this have to do with scaling? Well, if we wanted to add more instances of the flask API in order to reduce load, we simply create an upstream service containing multiple api instances:
 ```

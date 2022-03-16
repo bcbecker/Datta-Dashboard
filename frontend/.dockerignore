@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+.gitattributes
+.github
+
+# Docker
+Dockerfile.*
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md
+
+# macOS (optional)
+.DS_Store
+
+# Visual Studio Code (optional)
+.vscode
+
+# Node
+**/node_modules
+**/dist
+.git
+npm-debug.log
+.coverage
+.coverage.*
+.env

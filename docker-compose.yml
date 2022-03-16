@@ -2,14 +2,14 @@ version: '3.7'
 
 services:
 
-  api:
+  backend:
     container_name: flask-container
     build:
-      context: ./server
-      dockerfile: Dockerfile.server
+      context: ./backend
+      dockerfile: Dockerfile.backend
     entrypoint: python run.py
     env_file:
-      - server/.env
+      - backend/.env
     depends_on:
       - redis
       - postgres
@@ -17,26 +17,26 @@ services:
   redis:
     container_name: redis-container
     build:
-      context: ./_deployment/redis
+      context: ./redis
       dockerfile: Dockerfile.redis
     command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-    - ./_deployment/redis/redis-jwt-data:/data
-    - ./_deployment/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    - ./redis/redis-jwt-data:/data
+    - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
 
   postgres:
     container_name: postgres-container
     build:
-      context: ./_deployment/postgres
+      context: ./postgres
       dockerfile: Dockerfile.postgres
     env_file:
-      - server/.env
+      - backend/.env
 
-  client:
+  frontend:
     container_name: react-datta-container
     build:
-      context: .
-      dockerfile: ./client/Dockerfile.client
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
     volumes:
       - .:/app
       - /app/node_modules
@@ -45,4 +45,4 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
     depends_on:
-      - api
+      - backend

@@ -5,7 +5,7 @@
 .github
 
 # Docker
-Dockerfile
+Dockerfile.*
 docker-compose.yml
 .dockerignore
 
@@ -23,9 +23,8 @@ SECURITY.md
 # Visual Studio Code (optional)
 .vscode
 
-# Node
-node_modules/
-
 # Python
+.env
 Pipfile
 Pipfile.lock
+**/__pycache__
